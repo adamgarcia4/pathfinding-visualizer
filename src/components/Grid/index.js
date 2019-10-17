@@ -4,9 +4,10 @@ import React from 'react'
 // import cx from 'classnames'
 // import styles from './Style.module.css'
 import styled from 'styled-components'
+import dijkstra from '../../algorithms/dijkstra'
 
-const maxRows = 10;
-const maxCols = 10;
+const maxRows = 5;
+const maxCols = 5;
 
 const NodeDiv = styled.th`
 	width: 30px;
@@ -16,22 +17,25 @@ const NodeDiv = styled.th`
 `
 
 // eslint-disable
-const Node = ({ type, data, currPos }) => {
+const Node = ({ data, onClick }) => {
 	let content = ''
 
 	if(data.isStart) content = 'S'
 	if(data.isEnd) content = 'E'
 
 	return (
-		<NodeDiv>
+		<NodeDiv onClick={() => onClick(data)}>
 			{content}
 		</NodeDiv>
 	)
 }
 
-const getNodeInitialState = () => ({
+const getNodeInitialState = (x,y) => ({
+	x,
+	y,
 	isStart: false,
-	isEnd: false
+	isEnd: false,
+	distance: Infinity
 })
 
 const getNodes = () => {
@@ -41,7 +45,7 @@ const getNodes = () => {
 		const currentRow = []
 
 		for(let col = 0; col < maxCols; col++) {
-			currentRow.push(getNodeInitialState())
+			currentRow.push(getNodeInitialState(col, row))
 		}
 
 		nodes.push(currentRow)
@@ -56,18 +60,22 @@ const Grid = () => {
 	nodes[1][2].isStart = true
 	nodes[3][4].isEnd = true
 	
+	const startNode = nodes[1][2]
+	const endNode = nodes[3][4]
+
 	return (
 		<table>
 			{nodes.map((row, rowIndex) => {
 				const rowDiv = []
 
 				{row.map((col, colIndex) => {
-					
-					
-					const nodeData = nodes[rowIndex][colIndex]
+					const nodeData = nodes[colIndex][rowIndex]
 					const currPos = { xCurr: rowIndex, yCurr: colIndex }
 
-					rowDiv.push(<Node key={`${rowIndex}__${colIndex}`} data={nodeData} currPos={currPos}/>)
+					rowDiv.push(<Node key={`${rowIndex}__${colIndex}`} data={nodeData} currPos={currPos} onClick={e => {
+						// console.log('e:',e)
+						console.log('algo: ', dijkstra(nodes, startNode, endNode))
+					}}/>)
 				})}
 
 				
