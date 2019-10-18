@@ -10,7 +10,7 @@ const NodeDiv = styled.th`
 `
 interface IfcNodeInput {
 	data: IfcNode,
-	onClick: Function
+	onClick: Function,
 }
 // eslint-disable
 const Node = (props: IfcNodeInput) => {

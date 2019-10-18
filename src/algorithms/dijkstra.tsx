@@ -49,72 +49,90 @@ const test = deserialize('1111')
 
 
 const dijkstra = (grid: IfcNode[][], start: IfcNode, end: IfcNode) => {
-	console.log('grid:',grid)
-
 	const unvisitedSet = []
 	const isUnvisitedLookup: any = {}
 	
 	// Step 1
 	// mark all nodes unvisited.
 	// create a set of all unvisited nodes
-	for(let i=0;i<grid.length; i++) {
-		for(let j=0; j<grid[0].length; j++) {
+	for(let x=0;x<grid.length; x++) {
+		for(let y=0; y<grid[0].length; y++) {
 			
 			// Step 2
 			// Assign to every node a tentative distance value.
 			// 0 for initial node, infinity for all other nodes
 			// set initial node as current
-			if(isSameNode(grid[i][j], start)) {
-				grid[i][j].distance = 0
+			if(isSameNode(grid[x][y], start)) {
+				grid[x][y].distance = 0
 			} else {
-				grid[i][j].distance = Infinity
+				grid[x][y].distance = Infinity
 			}
-			unvisitedSet.push(grid[i][j])
-			isUnvisitedLookup[serialize(grid[i][j])] = true
+			unvisitedSet.push(grid[x][y])
+			isUnvisitedLookup[serialize(grid[x][y])] = true
 		}
 	}
 
-	console.log('unvisitedSet:',unvisitedSet)
-
 	sortArr(unvisitedSet)
 
-	let currNode = unvisitedSet.shift()!
-
-	console.log('currNode:',currNode)
+	let currNode: IfcNode
 	
 	// Step 3
 	// For the current node, consider all unvisited neighbors and calculate tentative distances through current node.
 	// compare newly calculated tentative distance to current assigned value.  If smaller, assign smaller one.
 	// for each unvisited node, need to calculate distances, then if it is cheaper, then assign distance here.
 
-	const nodesAround = getNodesAround(grid, currNode)
+	let shouldContinue = true
+	while(unvisitedSet.length && shouldContinue){
+		currNode = unvisitedSet.shift()!
 
-	nodesAround.map(node => {
-		if(!isUnvisitedLookup[serialize(node)]) return
+		const nodesAround = getNodesAround(grid, currNode)
 
-		const nodeObj = grid[node.x][node.y];
+		nodesAround.map(node => {
+			if(!isUnvisitedLookup[serialize(node)]) return
 
-		// TODO: Here is where adding path length goes.
-		const newDistance = currNode.distance + 1
+			const nodeObj = grid[node.x][node.y]
+
+			// TODO: Here is where adding path length goes.
+			const newDistance = currNode.distance + 1
+			
+			if( newDistance < nodeObj.distance) {
+				nodeObj.distance = newDistance
+				nodeObj.prevNode = serialize(currNode)
+			}
+		})
+
+		// Step 4
+		// When done considering all unvisited neighbors, mark current node as visited, remove from unvisited.  A visited node will never be checked again
+		isUnvisitedLookup[serialize(currNode)] = false
+
+		// Step 5
+		// If destination node has been marked visited, or if smallest tentative distance among nodes in the unvisited set is infinity, then stop.  Algo has finished.
+		if(!isUnvisitedLookup[serialize(end)]) shouldContinue = false
 		
-		nodeObj.distance = Math.min(nodeObj.distance, newDistance)
-	})
-	
+		sortArr(unvisitedSet)
+		// Step 6
+		// Otherwise, select unvisited node that marked with smallest tentitve distance, set as current node, then go back to Step 3.
+	}
 
 	console.log('grid:',grid)
-
-	// Step 4
-	// When done considering all unvisited neighbors, mark current node as visited, remove from unvisited.  A visited node will never be checked again
-	isUnvisitedLookup[serialize(currNode)] = false
-
-	// Step 5
-	// If destination node has been marked visited, or if smallest tentative distance among nodes in the unvisited set is infinity, then stop.  Algo has finished.
-	if(!isUnvisitedLookup[serialize(end)]) return
 	
-	// Step 6
-	// Otherwise, select unvisited node that marked with smallest tentitve distance, set as current node, then go back to Step 3.
-	sortArr(unvisitedSet)
+	// we now need to backtrack.  Start with end node, then backtrack
+	const { x, y } = end
+	
+	const nodesInOrder = []
 
+	currNode = grid[x][y]
+	while(!currNode.isStart) {
+		nodesInOrder.unshift(currNode.prevNode)
+		
+		const prevNodeObj: any = deserialize(currNode.prevNode)
+		grid[prevNodeObj.x][prevNodeObj.y].isPartOfPath = true
+		currNode = grid[prevNodeObj.x][prevNodeObj.y]
+	}
+
+	console.log('nodesInOrder:',nodesInOrder)
+	
+	return grid
 }
 
 export default dijkstra
