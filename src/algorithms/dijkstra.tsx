@@ -50,6 +50,7 @@ const test = deserialize('1111')
 
 const dijkstra = (grid: IfcNode[][], start: IfcNode, end: IfcNode) => {
 	const unvisitedSet = []
+	const nodesCheckedInOrder = []
 	const isUnvisitedLookup: any = {}
 	
 	// Step 1
@@ -87,8 +88,12 @@ const dijkstra = (grid: IfcNode[][], start: IfcNode, end: IfcNode) => {
 
 		const nodesAround = getNodesAround(grid, currNode)
 
+		const nodesCheckedThisTurn: string[] = []
+		
 		nodesAround.map(node => {
 			if(!isUnvisitedLookup[serialize(node)]) return
+
+			nodesCheckedThisTurn.push(serialize(node))
 
 			const nodeObj = grid[node.x][node.y]
 
@@ -101,6 +106,8 @@ const dijkstra = (grid: IfcNode[][], start: IfcNode, end: IfcNode) => {
 			}
 		})
 
+		nodesCheckedInOrder.push(nodesCheckedThisTurn)
+		
 		// Step 4
 		// When done considering all unvisited neighbors, mark current node as visited, remove from unvisited.  A visited node will never be checked again
 		isUnvisitedLookup[serialize(currNode)] = false
@@ -114,25 +121,26 @@ const dijkstra = (grid: IfcNode[][], start: IfcNode, end: IfcNode) => {
 		// Otherwise, select unvisited node that marked with smallest tentitve distance, set as current node, then go back to Step 3.
 	}
 
-	console.log('grid:',grid)
+	// console.log('grid:',grid)
 	
 	// we now need to backtrack.  Start with end node, then backtrack
 	const { x, y } = end
 	
-	const nodesInOrder = []
+	const pathToTarget = []
 
 	currNode = grid[x][y]
 	while(!currNode.isStart) {
-		nodesInOrder.unshift(currNode.prevNode)
+		pathToTarget.unshift(currNode.prevNode)
 		
 		const prevNodeObj: any = deserialize(currNode.prevNode)
 		grid[prevNodeObj.x][prevNodeObj.y].isPartOfPath = true
 		currNode = grid[prevNodeObj.x][prevNodeObj.y]
 	}
 
-	console.log('nodesInOrder:',nodesInOrder)
+	// console.log('nodesInOrder:',pathToTarget)
+	// console.log('nodesCheckedInOrder:',nodesCheckedInOrder)
 	
-	return grid
+	return {grid, pathToTarget, nodesCheckedInOrder}
 }
 
 export default dijkstra

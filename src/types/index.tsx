@@ -5,7 +5,9 @@ export interface IfcNode {
 	isEnd: boolean,
 	distance: number,
 	prevNode: string,
-	isPartOfPath: boolean
+	isPartOfPath: boolean,
+
+	isVisited: boolean,
 }
 
 export const _ = ''
